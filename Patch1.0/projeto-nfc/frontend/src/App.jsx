@@ -1,15 +1,26 @@
 import { Routes, Route } from 'react-router-dom'
-import PortalPaciente from './PortalPaciente' // Vamos criar este arquivo
-import './App.css' // Pode customizar o CSS aqui
+import PortalPaciente from './PortalPaciente' 
+import './App.css' 
+import Login from './Login';
+import Dashboard from './Dashboard';
+import ProtectedRoute from './ProtectedRoute'; // <-- Importe o Porteiro
 
 function App() {
   return (
     <Routes>
-      {/* Esta é a rota que a tag NFC vai chamar */}
+      {/* Rotas Públicas */}
       <Route path="/portal/:userId" element={<PortalPaciente />} />
+      <Route path="/login" element={<Login />} />
 
-      {/* Rota para o futuro dashboard */}
-      {/* <Route path="/admin" element={<h1>Dashboard Admin</h1>} /> */}
+      {/* Rota Privada */}
+      <Route 
+        path="/admin/dashboard" 
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } 
+      />
     </Routes>
   )
 }

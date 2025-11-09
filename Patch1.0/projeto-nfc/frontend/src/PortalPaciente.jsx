@@ -36,7 +36,7 @@ function PortalPaciente() {
 
   // 3. Funções de Ação
   
-  // FUNÇÃO ATUALIZADA: Agora usa 'dadosPrivados'
+  // Função para Ligar (agora usa 'dadosPrivados')
   const handleLigarEmergencia = () => {
     // Verifica se 'dadosPrivados' existe antes de tentar ler
     if (dadosPrivados && dadosPrivados.contatoEmergencia) {
@@ -44,7 +44,7 @@ function PortalPaciente() {
     }
   };
 
-  // Função de Desbloqueio (sem alteração)
+  // Função de Desbloqueio
   const handleUnlock = async (e) => {
     e.preventDefault(); // Impede o formulário de recarregar a página
     setErro('');
@@ -58,7 +58,6 @@ function PortalPaciente() {
 
       // O Flask responde com { success: true, data: {...} }
       if (res.data.success) {
-        // 'res.data.data' agora contém { tipoSanguineo, alergias, contatoEmergencia, ... }
         setDadosPrivados(res.data.data); 
         setEstaBloqueado(false); // Desbloqueia!
       }
@@ -69,10 +68,13 @@ function PortalPaciente() {
     }
   };
 
+  // Função para bloquear a tela novamente
   const handleLock = () => {
-      setEstaBloqueado(true); // Simplesmente diz ao React para voltar ao estado bloqueado
-      setPin('');             // Limpa o campo do PIN para a próxima vez
-    };
+    setEstaBloqueado(true); // Volta ao estado bloqueado
+    setPin('');             // Limpa o PIN digitado
+    setErro('');            // Limpa mensagens de erro
+  };
+
 
   // 4. Renderização (O que aparece na tela)
 
@@ -119,27 +121,66 @@ function PortalPaciente() {
         // 4b. Se estiver DESBLOQUEADO, mostra TUDO
         <div className="desbloqueado">
           
-          {/* Botão de Emergência agora SÓ aparece aqui */}
-          <button className="btn-emergencia" onClick={handleLigarEmergencia}>
-            Ligar para Contato de Emergência
-          </button>
+          {/* Botão de Emergência (Só aparece se 'dadosPrivADOS' existir) */}
+          {dadosPrivados && (
+            <button className="btn-emergencia" onClick={handleLigarEmergencia}>
+              Ligar para Contato de Emergência
+            </button>
+          )}
 
           <h3>Informações Médicas</h3>
-          <div className="info-grid">
-            {/* Informações antigas e NOVOS CAMPOS */}
-            <p><strong>Tipo Sanguíneo:</strong> {dadosPrivados.tipoSanguineo}</p>
-            <p><strong>Alergias:</strong> {dadosPrivados.alergias}</p>
-            <p><strong>Medicamentos:</strong> {dadosPrivados.medicamentosUsoContinuo}</p>
-            <p><strong>Histórico Médico:</strong> {dadosPrivados.historico}</p>
-            
-            {/* Você pode adicionar quantos campos quiser aqui */}
-            {/* Apenas garanta que 'dadosPrivados.NOME_DO_CAMPO' 
-                corresponda ao que está no Firebase */}
-          </div>
+
+          {/* --- CORREÇÃO DA TELA EM BRANCO ---
+            Verificamos se 'dadosPrivados' não é nulo ANTES de tentar ler
+            as propriedades dele (como tipoSanguineo, alergias, etc.)
+          */}
+          {dadosPrivados ? (
+            <div className="info-grid">
+              
+              {/* Campos de string simples */}
+              <p><strong>Tipo Sanguíneo:</strong> {dadosPrivados.tipoSanguineo || 'Não informado'}</p>
+              <p><strong>Histórico Médico:</strong> {dadosPrivados.historico || 'Não informado'}</p>
+
+              {/* Campo de Array: Alergias */}
+              <div className="lista-itens">
+                <strong>Alergias:</strong>
+                {dadosPrivados.alergias && dadosPrivados.alergias.length > 0 ? (
+                  <ul>
+                    {dadosPrivados.alergias.map((alergia, index) => (
+                      <li key={index}>{alergia}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>Nenhuma alergia registrada.</p>
+                )}
+              </div>
+
+              {/* Campo de Array: Medicamentos */}
+              <div className="lista-itens">
+                <strong>Medicamentos:</strong>
+                {dadosPrivados.medicamentosUsoContinuo && dadosPrivados.medicamentosUsoContinuo.length > 0 ? (
+                  <ul>
+                    {dadosPrivados.medicamentosUsoContinuo.map((medicamento, index) => (
+                      <li key={index}>{medicamento}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>Nenhum medicamento registrado.</p>
+                )}
+              </div>
+              
+            </div>
+          ) : (
+            // Se 'dadosPrivados' for nulo por um instante, mostre isso
+            <p>Carregando informações...</p>
+          )}
+
+          {/* --- Botão de Bloquear Tela --- */}
           <hr />
           <button className="btn-bloquear" onClick={handleLock}>
             Bloquear Tela
           </button>
+          
         </div>
       )}
     </div>
